@@ -30,6 +30,8 @@ The binary `check_tcp_raw` is created in the `bin/` directory.
 
 ## Usage
 
+Because of the usage of _RAW_ sockets, the check need to be run as _root_.
+
 ```sh
 check_tcp_raw [OPTION...] SOURCE_IFACE REAL_SERVER VIRTUAL_IP PORT
 ```

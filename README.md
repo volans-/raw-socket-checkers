@@ -93,6 +93,8 @@ _LB_ role will need to update this file accordingly.
 
 ## List of available checks
 
+Because of the usage of _RAW_ sockets, all checks need to be run as _root_.
+
 * [TCP check](doc/check_tcp_raw.md)
 * [HTTP GET check](doc/check_http_get_raw.md) (_BETA_)
 * [HTTP check](doc/check_http_raw.md) (_BETA_)
@@ -114,9 +116,11 @@ To compile all checks just run:
 make
 ```
 
-The binaries are created in the `bin/` directory, all the other build artifacts
-are created in the `build/` directory. Run `make clean` to clean all compiled
-artifacts.
+* The binaries are created in the `bin/` directory.
+* All the other build artifacts are created in the `build/` directory.
+* Run `make clean` to clean all compiled artifacts.
+* The checks can be compiled individually, using `make tcp`, `make http_get`
+  or `make http`.
 
 ## TODO
 
