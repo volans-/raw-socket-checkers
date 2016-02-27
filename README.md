@@ -80,7 +80,7 @@ the traffic in response to the checks performed using the _RAW_ sockets. In
 this scenario the possible solutions are:
 1. Block with iptables the outgoing reset packets sent by the Kernel.
 1. Add the _VIP_ address to the loopback interface to all the _LBs_ in the
-  cluster.
+   cluster.
 1. Fallback to standard checks using the real server IP on stand-by/backup
    _LBs_
 
@@ -94,17 +94,17 @@ _LB_ role will need to update this file accordingly.
 ## List of available checks
 
 * [TCP check](doc/check_tcp_raw.md)
-* [HTTP GET check](doc/check_http_get_raw.md)
-* [HTTP check](doc/check_http_raw.md)
+* [HTTP GET check](doc/check_http_get_raw.md) (_BETA_)
+* [HTTP check](doc/check_http_raw.md) (_BETA_)
 
 ### Dependencies
 
 * GNU C compiler (i.e. _gcc_ package).
 * GNU C Library: Development Libraries and Header Files (i.e. install
-_libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
-RedHat based ones).
-* [HTTP checks only] OpenSSL development files (i.e. install _libssl-dev_ package on Debian based
-distros, _openssl-devel_ on RedHat based ones).
+  _libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
+  RedHat based ones).
+* [HTTP checks only] OpenSSL development files (i.e. install _libssl-dev_
+  package on Debian based distros, _openssl-devel_ on RedHat based ones).
 
 ### Compilation
 

@@ -17,8 +17,8 @@ close (RST/ACK).
 
 * C compiler (i.e. _GCC_).
 * GNU C Library: Development Libraries and Header Files (i.e. install
-_libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
-RedHat based ones).
+  _libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
+  RedHat based ones).
 
 ## Compilation
 
@@ -41,29 +41,29 @@ check_tcp_raw [OPTION...] SOURCE_IFACE REAL_SERVER VIRTUAL_IP PORT
 ### Parameters
 
 * __SOURCE_IFACE__: the name of the network interface to use to send the
-packets from (i.e. _eth0_).
+  packets from (i.e. _eth0_).
 * __REAL_SERVER__: IPv4 or hostname of the real server to check. Only used to
-get it's MAC address (i.e. _10.0.0.42_).
+  get it's MAC address (i.e. _10.0.0.42_).
 * __VIRTUAL_IP__: IPv4 or hostname of the virtual IP for which the check
-should be performed, used as destination IP in the TCP packets
-(i.e. _10.0.0.100_).
+  should be performed, used as destination IP in the TCP packets
+  (i.e. _10.0.0.100_).
 * __PORT__: TCP port number to use for the check (i.e. _80_).
 
 ### Options
 
 * __-c__, __--clean-close__: Close the connection in a clean way (FIN/ACK -
-FIN/ACK - ACK) instead of sending an RST/ACK. Some software don't like to have
-the connection closed abruptly with an RST and might flood their logs.
+  FIN/ACK - ACK) instead of sending an RST/ACK. Some software don't like to
+  have the connection closed abruptly with an RST and might flood their logs.
 * __-r__, __--role-file=FILE__: Path of the file that contains the current role
-of the load balancer. Only the first character is read, accepted values are:
-_1 => MASTER_, _anything else => BACKUP_. When this parameter is set the checks
-on a BACKUP server are done using the real server IP instead of the VIRTUAL_IP
-with a standard _TCP_ socket.
+  of the load balancer. Only the first character is read, accepted values are:
+  _1 => MASTER_, _anything else => BACKUP_. When this parameter is set the
+  checks on a BACKUP server are done using the real server IP instead of the
+  VIRTUAL_IP with a standard _TCP_ socket.
 * __-t__, __--timeout=MILLISECONDS__: Timeout for each REAL_SERVER reply in ms.
-To disable set to 0. [Default: 1000]
+  To disable set to 0. [Default: 1000]
 * __-v__, __--verbose__: Produce increasing verbose output to standard error
-based on the number of occurrences. `-v`: CLI parameters and all TCP packets.
-`-vv`: print also all ARP packets.
+  based on the number of occurrences. `-v`: CLI parameters and all TCP packets.
+  `-vv`: print also all ARP packets.
 * __-?__, __--help__: Give this help list
 * __--usage__: Give a short usage message
 

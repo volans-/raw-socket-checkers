@@ -1,4 +1,4 @@
-# Check HTTP GET RAW
+# Check HTTP RAW (_BETA_)
 
 It performs an HTTP Request of __PATH__ for __HOST__ using a RAW socket sending
 the packets from the __SOURCE_INTERFACE__ to the _MAC address_ of the
@@ -13,14 +13,17 @@ This is suitable to be used as a check for load balancers in direct routing
 mode (_LVS-DR_) to ensure that the real server is indeed answering to packets
 with the __VIRTUAL_IP__ destination IP.
 
+__N.B.__: This check accepts only single TCP packets replies, see the _TODO_
+section in the [project README](../README.md) for future developments.
+
 ## Dependencies
 
 * GNU C compiler (i.e. _gcc_ package).
 * GNU C Library: Development Libraries and Header Files (i.e. install
-_libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
-RedHat based ones).
+  _libc6-dev_ package (or equivalent) on Debian based distros, _glibc-devel_ on
+  RedHat based ones).
 * OpenSSL development files (i.e. install _libssl-dev_ package on Debian based
-distros, _openssl-devel_ on RedHat based ones).
+  distros, _openssl-devel_ on RedHat based ones).
 
 ## Compilation
 
@@ -49,12 +52,12 @@ check_http_get_raw [OPTION...]
 ### Parameters
 
 * __SOURCE_IFACE__: the name of the network interface to use to send the
-packets from (i.e. _eth0_).
+  packets from (i.e. _eth0_).
 * __REAL_SERVER__: IPv4 or hostname of the real server to check. Only used to
-get it's MAC address (i.e. _10.0.0.42_).
+  get it's MAC address (i.e. _10.0.0.42_).
 * __VIRTUAL_IP__: IPv4 or hostname of the virtual IP for which the check
-should be performed, used as destination IP in the TCP packets
-(i.e. _10.0.0.100_).
+  should be performed, used as destination IP in the TCP packets
+  (i.e. _10.0.0.100_).
 * __PORT__: TCP port number to use for the check (i.e. _80_).
 * __HOST__: HTTP Host header to be used (i.e. _www.example.com_).
 * __PATH__: HTTP Resource to request, with leading slash (i.e. _/healthcheck_)
@@ -62,30 +65,30 @@ should be performed, used as destination IP in the TCP packets
 ### Options
 
 * __-M__, __--method=METHOD__: The HTTP Method to use for the HTTP Request.
-Accepted values are: GET, HEAD. [Default: GET]
+  Accepted values are: GET, HEAD. [Default: GET]
 * __-H__, __--header=HEADER__: Additional HTTP Header to send in the request in
-the format `"Name: Value"`. Can be specified multiple times to add more
-headers.
+  the format `"Name: Value"`. Can be specified multiple times to add more
+  headers.
 * __-S__, __--status-code=STATUS_CODE__: The expected HTTP Status Code for the
-check to be successful.
+  check to be successful.
 * __-R__, __--response-header=HEADER__: HTTP Header in the response that has to
-match for the check to be successful, in the format `"Name: Value"`. Can be
-specified multiple times to add more headers.
+  match for the check to be successful, in the format `"Name: Value"`. Can be
+  specified multiple times to add more headers.
 * __-A__, __--hash=MD5SUM__: The MD5 hash of the expected HTTP Response Body
-for the check to be successful.
+  for the check to be successful.
 * __-B__, __--body=BODY__: The expected HTTP Body as string for the check to
-be successful.
+  be successful.
 * __-r__, __--role-file=FILE__: Path of the file that contains the current role
-of the load balancer. Only the first character is read, accepted values are:
-_1 => MASTER_, _anything else => BACKUP_. When this parameter is set the checks
-on a BACKUP server are done using the real server IP instead of the VIRTUAL_IP
-with a standard _TCP_ socket.
+  of the load balancer. Only the first character is read, accepted values are:
+  _1 => MASTER_, _anything else => BACKUP_. When this parameter is set the
+  checks on a BACKUP server are done using the real server IP instead of the
+  VIRTUAL_IP with a standard _TCP_ socket.
 * __-t__, __--timeout=MILLISECONDS__: Timeout for each REAL_SERVER reply in ms.
-To disable set to 0. [Default: 1000]
+  To disable set to 0. [Default: 1000]
 * __-v__, __--verbose__: Produce increasing verbose output to standard error
-based on the number of occurrences. `-v`: CLI parameters and HTTP response
-summary. `-vv`: Print also the full HTTP response body. `-vvv`: Print also all
-TCP packets. `-vvvv`: Print also all ARP packets.
+  based on the number of occurrences. `-v`: CLI parameters and HTTP response
+  summary. `-vv`: Print also the full HTTP response body. `-vvv`: Print also
+  all TCP packets. `-vvvv`: Print also all ARP packets.
 * __-?__, __--help__: Give this help list
 * __--usage__: Give a short usage message
 
@@ -102,7 +105,7 @@ check_http_raw -vv -t 500 -r /var/run/lvs.role -S 200 -A d36f8f9425c4a8000ad9c4a
 
 The sample usage and sample output uses a verbosity level of 2 to show only
 HTTP related logging, see the sample output of the
-[TCP check](doc/check_tcp_raw.md) for an example of TCP and ARP
+[TCP check](check_tcp_raw.md) for an example of TCP and ARP
 logging.
 
 ### Sample output
