@@ -81,6 +81,7 @@ typedef struct {
     char real_server[256];  /* IPv4 or hostname of the real server to check */
     char virtual_ip[256];  /* IPv4 or hostname of the VIP to check */
     char role_file[256];  /* Path to the file where the LB role is saved */
+    uint8_t clean_close;  /* Whether to close the connection in a clean way */
     verbosity_level_type verbosity;  /* Verbosity level */
     uint32_t timeout;  /* Socket timeout for receiving packets in ms */
 } check_tcp_raw_arguments_type;

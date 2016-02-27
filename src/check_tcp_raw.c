@@ -43,6 +43,9 @@ This is suitable to be used as a check for load balancers in direct routing
 mode (LVS-DR) to ensure that the real server is indeed answering to packets
 with the VIRTUAL_IP destination IP.
 
+Optionally a clean close can be performed (FIN/ACK - FIN/ACK - ACK) instead of
+the quick close (RST/ACK).
+
 Example:
 check_tcp_raw -vv -t 500 -r /var/run/lvs.role eth0 10.0.0.42 10.0.0.100 80
 
@@ -72,6 +75,10 @@ PARAMETERS
 OPTIONS
 ----------------------------
 
+  -c, --clean-close          Close the connection in a clean way (FIN/ACK -
+                             FIN/ACK - ACK) instead of sending an RST/ACK. Some
+                             software don't like to have the connection closed
+                             abruptly with an RST and might flood their logs.
   -r, --role-file=FILE       Path of the file that contains the current role of
                              the load balancer. Only the first character is
                              read, accepted values are: 1 => MASTER, anything

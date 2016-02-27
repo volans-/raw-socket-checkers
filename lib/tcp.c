@@ -549,11 +549,17 @@ parse_ethernet_frame(packet_type *pck)
             exit_on_error(pck,
                 "TCP packet has length %zu, expected at least %zu\n",
                 pck->eth_frame_len, pos);
-        else if (pos < pck->eth_frame_len) {
+        else if (pos < pck->eth_frame_len &&
+            pck->tcphdr.th_flags != (TH_SYN | TH_ACK)) {
             /* TCP data */
             pck->tcp_data_len = (pck->eth_frame_len - pos);
+
             memcpy(&(pck->tcp_data), pck->eth_frame + pos,
-                pck->tcp_data_len * sizeof(uint8_t));
+            pck->tcp_data_len * sizeof(uint8_t));
+        } else {
+            /* Reset payload */
+            pck->tcp_data_len = 0;
+            memset(&(pck->tcp_data), 0, IP_MAXPACKET);
         }
 
         memcpy(&(pck->src_ip), &(pck->iphdr.ip_src), sizeof(struct in_addr));
@@ -1089,8 +1095,11 @@ tcp_check(check_tcp_raw_arguments_type *arguments)
     if (is_master(arguments) == 1) {
         open_raw_tcp_connection(arguments, &send_pck, &recv_pck);
 
-        /* We are done, quickly close the connection */
-        abort_tcp_connection(&send_pck, &recv_pck);
+        /* We are done, close the connection */
+        if (arguments->clean_close == 1)
+            close_tcp_connection(arguments, &send_pck, &recv_pck);
+        else
+            abort_tcp_connection(&send_pck, &recv_pck);
     } else
         (void)open_tcp_connection(arguments);
 

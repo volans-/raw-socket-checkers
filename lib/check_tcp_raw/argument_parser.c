@@ -45,6 +45,8 @@ static char doc[] = "\ncheck_tcp_raw -- a TCP/IPv4 checker with RAW "
     "This is suitable to be used as a check for load balancers in direct "
     "routing mode (LVS-DR) to ensure that the real server is indeed answering "
     "to packets with the VIRTUAL_IP destination IP.\n\n"
+    "Optionally a clean close can be performed (FIN/ACK - FIN/ACK - ACK) "
+    "instead of the quick close (RST/ACK).\n\n"
     "Example:\ncheck_tcp_raw -vv -t 500 -r /var/run/lvs.role eth0 10.0.0.42 "
     "10.0.0.100 80\n\n"
     "============================\nEXIT STATUS\n----------------------------"
@@ -67,6 +69,11 @@ static char args_doc[] = "SOURCE_IFACE REAL_SERVER VIRTUAL_IP PORT";
 
 /* Available options */
 static struct argp_option options[] = {
+    {"clean-close", 'c', 0, 0, "Close the connection in a clean way "
+        "(FIN/ACK - FIN/ACK - ACK) instead of sending an RST/ACK. Some "
+        "software don't like to have the connection closed abruptly with an "
+        "RST and might flood their logs."
+    },
     {"role-file", 'r', "FILE", 0, "Path of the file that contains the current "
         "role of the load balancer. Only the first character is read, "
         "accepted values are: 1 => MASTER, anything else => BACKUP. When this "
@@ -97,6 +104,7 @@ parse_opt(int key, char *arg, struct argp_state *state)
     case 'v': arguments->verbosity++; break;
     case 't': arguments->timeout = (uint32_t) atoi(arg); break;
     case 'r': strcpy(arguments->role_file, arg); break;
+    case 'c': arguments->clean_close = 1; break;
 
     case ARGP_KEY_ARG:
         switch (state->arg_num) {
@@ -134,6 +142,7 @@ parse_args(int argc, char **argv)
     /* Default values. */
     arguments.verbosity = RSC_HL_HIGH;  /* Lower layers no verbosity */
     arguments.timeout = 1000;  /* 1s, unit is in ms */
+    arguments.clean_close = 0;  /* By default quickly close the connection */
 
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 

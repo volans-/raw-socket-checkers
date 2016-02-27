@@ -120,7 +120,6 @@ artifacts.
 
 ## TODO
 
-* Add TCP_CLOSE_CHECK, a TCP check that closes in a clean way the connection.
 * Add Tests.
 * Extract common parameters and options to a common parser.
 * Support fragmented responses in HTTP checks.
