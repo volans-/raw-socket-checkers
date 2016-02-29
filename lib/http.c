@@ -23,14 +23,17 @@
  * Copyright (C) 2016 Riccardo Coccioli, <volans-@users.noreply.github.com>
  */
 
+#define _GNU_SOURCE 1           /* for TEMP_FAILURE_RETRY */
+
 #include <arpa/inet.h>          /* inet_pton(), inet_ntop() */
 
 #include <openssl/md5.h>
 
+#include <errno.h>              /* errno, perror() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>             /* strcpy, memset(), memcpy() */
-#include <unistd.h>             /* close() */
+#include <unistd.h>             /* close(), TEMP_FAILURE_RETRY */
 
 #include "common.h"
 
@@ -487,12 +490,12 @@ http_get_tcp_check(check_http_get_raw_arguments_type *arguments)
 
     data_len = set_http_get(arguments, data);
 
-    if (write(sd, data, data_len) < 0)
+    if (TEMP_FAILURE_RETRY(write(sd, data, data_len)) < 0)
         exit_on_perror("Unable to send GET request", NULL);
 
     /* Expect an HTTP response */
     memset(data, 0, IP_MAXPACKET);
-    if (read(sd, &data[0], IP_MAXPACKET) < 0)
+    if (TEMP_FAILURE_RETRY(read(sd, &data[0], IP_MAXPACKET)) < 0)
         exit_on_perror("Didn't get any response", NULL);
 
     /* Parse the HTTP response and ACK it */
@@ -535,12 +538,12 @@ http_tcp_check(check_http_raw_arguments_type *arguments)
 
     data_len = build_http_request(arguments, data);
 
-    if (write(sd, data, data_len) < 0)
+    if (TEMP_FAILURE_RETRY(write(sd, data, data_len)) < 0)
         exit_on_perror("Unable to send GET request", NULL);
 
     /* Expect an HTTP response */
     memset(data, 0, IP_MAXPACKET);
-    if (read(sd, &data[0], IP_MAXPACKET) < 0)
+    if (TEMP_FAILURE_RETRY(read(sd, &data[0], IP_MAXPACKET)) < 0)
         exit_on_perror("Didn't get any response", NULL);
 
     /* Parse the HTTP response and ACK it */

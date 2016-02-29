@@ -23,6 +23,8 @@
  * Copyright (C) 2016 Riccardo Coccioli, <volans-@users.noreply.github.com>
  */
 
+#define _GNU_SOURCE 1           /* for TEMP_FAILURE_RETRY */
+
 #include <sys/types.h>          /* socket(), uint8_t, uint16_t, uint32_t */
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -42,7 +44,7 @@
 #include <stdlib.h>
 #include <string.h>             /* strcpy, memset(), memcpy() */
 #include <time.h>
-#include <unistd.h>             /* close() */
+#include <unistd.h>             /* close(), TEMP_FAILURE_RETRY */
 
 #include "common.h"
 
@@ -197,13 +199,13 @@ set_src_addr(int sd, char iface[], packet_type *pck)
     snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", iface);
 
     /* Get MAC address. */
-    if (ioctl(sd, SIOCGIFHWADDR, &ifr) < 0)
+    if (TEMP_FAILURE_RETRY(ioctl(sd, SIOCGIFHWADDR, &ifr)) < 0)
         exit_on_perror("ioctl() failed to get source MAC address", pck);
 
     memcpy(pck->src_mac, ifr.ifr_hwaddr.sa_data, 6 * sizeof(uint8_t));
 
     /* Get IPv4 address */
-    if (ioctl(sd, SIOCGIFADDR, &ifr) < 0)
+    if (TEMP_FAILURE_RETRY(ioctl(sd, SIOCGIFADDR, &ifr)) < 0)
         exit_on_perror("ioctl() failed to get source IPv4 address", pck);
 
     memcpy(&pck->src_ip, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr,
@@ -213,7 +215,7 @@ set_src_addr(int sd, char iface[], packet_type *pck)
     addr = (struct sockaddr_ll *) &(pck->st_addr);
 
     /* Get interface index, needed by sendto(), recvfrom() */
-    if ((addr->sll_ifindex = if_nametoindex(iface)) == 0)
+    if ((addr->sll_ifindex = TEMP_FAILURE_RETRY(if_nametoindex(iface))) == 0)
         exit_on_perror("if_nametoindex() failed to obtain interface index",
             pck);
 
@@ -684,14 +686,16 @@ create_tcp_socket(struct sockaddr_in *tcp_addr, struct in_addr *src_addr)
     struct sockaddr_in addr = {0};
     socklen_t addr_len;
 
-    if ((sd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
+    if ((sd = TEMP_FAILURE_RETRY(socket(
+            AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0))) < 0)
         exit_on_perror("Dummy TCP socket() error", NULL);
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(0);
     memcpy(&(addr.sin_addr), src_addr, sizeof(*src_addr));
 
-    if (bind(sd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+    if (TEMP_FAILURE_RETRY(bind(
+            sd, (struct sockaddr *) &addr, sizeof(addr))) < 0) {
         close(sd);
         exit_on_perror("Dummy TCP bind() error", NULL);
     }
@@ -699,7 +703,8 @@ create_tcp_socket(struct sockaddr_in *tcp_addr, struct in_addr *src_addr)
     listen(sd, 1);
 
     addr_len = sizeof(tcp_addr);
-    if (getsockname(sd, (struct sockaddr *) tcp_addr, &addr_len) == -1) {
+    if (TEMP_FAILURE_RETRY(getsockname(
+            sd, (struct sockaddr *) tcp_addr, &addr_len)) == -1) {
         close(sd);
         exit_on_perror("Dummy TCP getsockname() failed", NULL);
     }
@@ -716,8 +721,8 @@ get_raw_socket(int protocol)
 {
     int sd;
 
-    if ((sd = socket(PF_PACKET, SOCK_RAW | SOCK_NONBLOCK,
-        htons(protocol))) < 0)
+    if ((sd = TEMP_FAILURE_RETRY(socket(
+            PF_PACKET, SOCK_RAW | SOCK_NONBLOCK, htons(protocol)))) < 0)
         exit_on_perror("RAW socket() failed", NULL);
 
     return (sd);
@@ -750,8 +755,9 @@ set_dst_mac(check_tcp_raw_arguments_type *arguments, packet_type *send_pck,
     print_arp_packet(RSC_LL_HIGH, send_pck, stdout);
 
     /* Send ARP request */
-    if ((bytes = sendto(sd, send_pck->eth_frame, send_pck->eth_frame_len, 0,
-        (struct sockaddr *) addr, sizeof(*addr))) <= 0) {
+    if ((bytes = TEMP_FAILURE_RETRY(sendto(sd, send_pck->eth_frame,
+            send_pck->eth_frame_len, 0, (struct sockaddr *) addr,
+            sizeof(*addr)))) <= 0) {
         close(sd);
         exit_on_perror("ARP request sendto() failed", send_pck);
     }
@@ -818,9 +824,11 @@ is_master(check_tcp_raw_arguments_type *arguments)
         return (1);
 
     fp = fopen(arguments->role_file, "r");
+    while (fp == NULL && errno == EINTR)
+        fp = fopen(arguments->role_file, "r");
 
     if (fp == NULL)
-      exit_on_perror("Unable to read role file", NULL);
+        exit_on_perror("Unable to read role file", NULL);
 
     master = fgetc(fp);
     fclose(fp);
@@ -857,9 +865,9 @@ receive_packet(packet_type *send_pck, packet_type *recv_pck, uint32_t timeout)
         memset(recv_pck->eth_frame, 0x00, sizeof(recv_pck->eth_frame));
 
         /* Receive a packet */
-        if ((recv_pck->eth_frame_len = recvfrom(rsc_sockets.raw_sd,
-                recv_pck->eth_frame, IP_MAXPACKET, 0,
-                (struct sockaddr *) &(recv_pck->st_addr), &fromlen)
+        if ((recv_pck->eth_frame_len = TEMP_FAILURE_RETRY(recvfrom(
+                rsc_sockets.raw_sd, recv_pck->eth_frame, IP_MAXPACKET, 0,
+                (struct sockaddr *) &(recv_pck->st_addr), &fromlen))
             ) == -1) {
 
             /* Non blocking socket, retry on EWOULDBLOCK error */
@@ -923,8 +931,9 @@ send_tcp_packet(packet_type *pck, uint8_t flags, uint32_t delta_seq,
     if (rsc_sockets.raw_sd <= 0)
         exit_on_error(pck, "Unable to send TCP packet, raw socket not set.\n");
 
-    if ((bytes = sendto(rsc_sockets.raw_sd, pck->eth_frame, pck->eth_frame_len,
-            0, (struct sockaddr *) &(pck->st_addr), sizeof(pck->st_addr))
+    if ((bytes = TEMP_FAILURE_RETRY(sendto(rsc_sockets.raw_sd, pck->eth_frame,
+            pck->eth_frame_len, 0, (struct sockaddr *) &(pck->st_addr),
+            sizeof(pck->st_addr)))
         ) <= 0)
         exit_on_perror("TCP packet sendto() failed", pck);
 
@@ -1014,8 +1023,8 @@ open_raw_tcp_connection(check_tcp_raw_arguments_type *arguments,
     rsc_sockets.raw_sd = get_raw_socket(ETH_P_IP);
 
     /* Bind the socket to a local address, reduce the # of packets received */
-    if (bind(rsc_sockets.raw_sd, (struct sockaddr *) addr,
-        sizeof(*addr)) == -1)
+    if (TEMP_FAILURE_RETRY(bind(rsc_sockets.raw_sd, (struct sockaddr *) addr,
+            sizeof(*addr))) == -1)
         exit_on_perror("RAW bind() failed", NULL);
 
     /* Set destination IP and port */
@@ -1045,7 +1054,8 @@ open_tcp_connection(check_tcp_raw_arguments_type *arguments)
     struct sockaddr_in addr = {0};
     struct sockaddr_in dst_addr = {0};
 
-    if ((rsc_sockets.stream_sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((rsc_sockets.stream_sd = TEMP_FAILURE_RETRY(socket(
+            AF_INET, SOCK_STREAM, 0))) < 0)
         exit_on_perror("TCP socket() error", NULL);
 
     addr.sin_family = AF_INET;
@@ -1055,8 +1065,8 @@ open_tcp_connection(check_tcp_raw_arguments_type *arguments)
     memcpy(&(addr.sin_addr), (struct in_addr *) &(dst_addr.sin_addr),
         sizeof(dst_addr.sin_addr));
 
-    if (connect(rsc_sockets.stream_sd, (struct sockaddr *) &addr,
-            sizeof(addr)) < 0)
+    if (TEMP_FAILURE_RETRY(connect(rsc_sockets.stream_sd,
+            (struct sockaddr *) &addr, sizeof(addr))) < 0)
         exit_on_perror("TCP connect() error", NULL);
 
     rsc_log(RSC_HL_LOW, stdout,
