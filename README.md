@@ -121,6 +121,7 @@ make
 * Run `make clean` to clean all compiled artifacts.
 * The checks can be compiled individually, using `make tcp`, `make http_get`
   or `make http`.
+* All checks were tested on Debian 8 (jessie) and Fedora 23 Server.
 
 ## TODO
 
