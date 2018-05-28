@@ -93,7 +93,8 @@ _LB_ role will need to update this file accordingly.
 
 ## List of available checks
 
-Because of the usage of _RAW_ sockets, all checks need to be run as _root_.
+Because of the usage of _RAW_ sockets, all checks need to be run as _root_
+or have the _CAP_NET_RAW_ capability.
 
 * [TCP check](doc/check_tcp_raw.md)
 * [HTTP GET check](doc/check_http_get_raw.md) (_BETA_)
